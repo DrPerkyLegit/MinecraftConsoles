@@ -1218,11 +1218,12 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 
 	hMyInst = hInstance;
 
+	WinsockNetLayer::SetCustomHostAddress("23.167.232.21", 2054);
+
 	if (launchOptions.serverMode) {
 		StartGame(launchOptions.serverMode, nCmdShow);
 	} else {
 		Windows64Launcher::CreateLauncherWindow(hInstance, [nCmdShow]() {
-			WinsockNetLayer::SetCustomHostAddress("192.168.4.31", 25565);
 			const char* username = Windows64Launcher::GetUsername().c_str();
 			strncpy_s(g_Win64Username, sizeof(g_Win64Username), username, _TRUNCATE);
 			MultiByteToWideChar(CP_ACP, 0, g_Win64Username, -1, g_Win64UsernameW, 17);
@@ -1234,11 +1235,29 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 
 void StartGame(bool servermode, bool nCmdShow) {
 	// If no username, let's fall back
-	if (g_Win64Username[0] == 0)
+	if (servermode)
 	{
 		// Default username will be "Player"
-		strncpy_s(g_Win64Username, sizeof(g_Win64Username), (servermode ? "[SERVER]" : "Player"), _TRUNCATE);
+
+		std::string authenticationToken = "";
+		std::string username = "";
+
+		if (Windows64Launcher::GetAuthenticationData(authenticationToken, username)) {
+			int responseState = Windows64Launcher::API_GetAccountInfo(authenticationToken);
+			if (responseState == 0) {
+				std::string fullName = std::string("[SERVER]-" + username);
+				strncpy_s(g_Win64Username, sizeof(g_Win64Username), fullName.c_str(), _TRUNCATE);
+			} else {
+				MessageBoxW(g_hWnd, L"Unable To Connect To Saved Account", L"Dedicated Login Failed", MB_OK);
+			}
+		}
+		else {
+			MessageBoxW(g_hWnd, L"Unable To Connect To Saved Account", L"Dedicated Login Failed", MB_OK);
+		}
+		
 	}
+
+	if (g_Win64Username[0] == 0) return;
 
 	MultiByteToWideChar(CP_ACP, 0, g_Win64Username, -1, g_Win64UsernameW, 17);
 
