@@ -1205,7 +1205,7 @@ void StartGame(bool servermode, bool nCmdShow) {
 	if (g_Win64Username[0] == 0)
 	{
 		// Default username will be "Player"
-		strncpy_s(g_Win64Username, sizeof(g_Win64Username), "Player", _TRUNCATE);
+		strncpy_s(g_Win64Username, sizeof(g_Win64Username), (servermode ? "[SERVER]" : "Player"), _TRUNCATE);
 	}
 
 	MultiByteToWideChar(CP_ACP, 0, g_Win64Username, -1, g_Win64UsernameW, 17);
