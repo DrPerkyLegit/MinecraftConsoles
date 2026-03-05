@@ -2208,6 +2208,8 @@ void MinecraftServer::main(__int64 seed, void *lpParameter)
 	ShutdownManager::HasStarted(ShutdownManager::eServerThread );
 #endif
 	server = new MinecraftServer();
+	server->setSaveOnExit(true);
+
 	server->run(seed, lpParameter);
 	delete server;
 	server = NULL;

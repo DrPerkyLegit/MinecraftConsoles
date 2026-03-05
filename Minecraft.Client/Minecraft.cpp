@@ -1262,14 +1262,13 @@ void Minecraft::run_middle()
 			// 4J-PB - AUTOSAVE TIMER - only in the full game and if the player is the host
 			if(level!=NULL && ProfileManager.IsFullVersion() && g_NetworkManager.IsHost())
 			{
-				/*if(!bAutosaveTimerSet)
+				if(!bAutosaveTimerSet)
 				{
-				// set the timer
-				bAutosaveTimerSet=true;
+					bAutosaveTimerSet=true;
 
-				app.SetAutosaveTimerTime();
+					app.SetAutosaveTimerTime();
 				}
-				else*/
+				else
 				{
 					// if the pause menu is up for the primary player, don't autosave
 					// If saving isn't disabled, and the main player has a app action running , or has any crafting or containers open, don't autosave
@@ -1498,9 +1497,9 @@ void Minecraft::run_middle()
 						if(g_KBMInput.IsKeyPressed(KeyboardMouseInput::KEY_THIRD_PERSON))
 							localplayers[i]->ullButtonsPressed|=1LL<<MINECRAFT_ACTION_RENDER_THIRD_PERSON;
 
-						if(g_KBMInput.IsKeyPressed(KeyboardMouseInput::KEY_DEBUG_INFO))
+						if (g_KBMInput.IsKeyPressed(KeyboardMouseInput::KEY_DEBUG_MENU))
 						{
-							localplayers[i]->ullButtonsPressed|=1LL<<MINECRAFT_ACTION_GAME_INFO;
+							localplayers[i]->ullButtonsPressed|=1LL<< MINECRAFT_ACTION_RENDER_DEBUG;
 						}
 
 						// In flying mode, Shift held = sneak/descend

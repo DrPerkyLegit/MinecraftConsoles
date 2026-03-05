@@ -32,6 +32,10 @@
 #include "Common\Network\Sony\NetworkPlayerSony.h"
 #endif
 
+#ifdef _WINDOWS64
+#include "Windows64/Windows64_Launcher.h"
+#endif
+
 // 4J - this class is fairly substantially altered as there didn't seem any point in porting code for banning, whitelisting, ops etc.
 
 PlayerList::PlayerList(MinecraftServer *server)
@@ -50,6 +54,10 @@ PlayerList::PlayerList(MinecraftServer *server)
 	viewDistance = 16;
 #else
 	viewDistance = 10;
+#endif
+
+#ifdef _WINDOWS64
+	viewDistance = Windows64Launcher::GetViewDistance();
 #endif
 
 	//int viewDistance = server->settings->getInt(L"view-distance", 10);

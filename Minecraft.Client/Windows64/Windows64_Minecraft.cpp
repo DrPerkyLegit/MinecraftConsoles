@@ -46,6 +46,11 @@
 
 #include "Windows64_Launcher.h"
 
+#include "..\..\Minecraft.World\ConsoleSaveFile.h"
+#include "..\..\Minecraft.World\ConsoleSaveFileOriginal.h"
+
+#include "..\Common\UI\IUIScene_PauseMenu.h"
+
 #ifdef _MSC_VER
 #pragma comment(lib, "legacy_stdio_definitions.lib")
 #endif
@@ -225,13 +230,9 @@ static Win64LaunchOptions ParseLaunchOptions()
 
 	g_Win64DedicatedServer = options.serverMode;
 
-	for (int i = 1; i < argc; ++i)
+	/*for (int i = 1; i < argc; ++i)
 	{
-		if (_wcsicmp(argv[i], L"-name") == 0 && (i + 1) < argc)
-		{
-			CopyWideArgToAnsi(argv[++i], g_Win64Username, sizeof(g_Win64Username));
-		}
-		else if (_wcsicmp(argv[i], L"-ip") == 0 && (i + 1) < argc)
+		if (_wcsicmp(argv[i], L"-ip") == 0 && (i + 1) < argc)
 		{
 			char ipBuf[256];
 			CopyWideArgToAnsi(argv[++i], ipBuf, sizeof(ipBuf));
@@ -257,7 +258,7 @@ static Win64LaunchOptions ParseLaunchOptions()
 					g_Win64MultiplayerPort = (int)port;
 			}
 		}
-	}
+	}*/
 
 	LocalFree(argv);
 	return options;
@@ -1085,6 +1086,8 @@ static int RunHeadlessServer()
 	app.SetGameHostOption(eGameHostOption_NaturalRegeneration, 1);
 	app.SetGameHostOption(eGameHostOption_DoDaylightCycle, 1);
 
+	app.SetGameSettings(ProfileManager.GetPrimaryPad(), eGameSetting_Autosave, 1);
+
 	MinecraftServer::resetFlags();
 	g_NetworkManager.HostGame(0, false, true, MINECRAFT_NET_MAX_PLAYERS, 0);
 
@@ -1099,6 +1102,29 @@ static int RunHeadlessServer()
 	NetworkGameInitData* param = new NetworkGameInitData();
 	param->seed = 0;
 	param->settings = app.GetGameHostOption(eGameHostOption_All);
+
+	wchar_t exePath[MAX_PATH] = {};
+	GetModuleFileNameW(NULL, exePath, MAX_PATH);
+
+	wchar_t* lastSlash = wcsrchr(exePath, L'\\');
+	if (lastSlash) {
+		*(lastSlash + 1) = L'\0'; // keep trailing slash
+	}
+
+	wchar_t filePath[MAX_PATH] = {};
+	_snwprintf_s(filePath, sizeof(filePath), _TRUNCATE, L"%sWindows64\\GameHDD\\saveData.ms", exePath);
+
+	File* saveFile = new File(filePath);
+
+	__int64 fileSize = saveFile->length();
+	FileInputStream fis(*saveFile);
+	byteArray ba(fileSize);
+	fis.read(ba);
+	fis.close();
+
+	LoadSaveDataThreadParam* saveData = new LoadSaveDataThreadParam(ba.data, ba.length, saveFile->getName());
+
+	param->saveData = saveData;
 
 	g_NetworkManager.ServerStoppedCreate(true);
 	g_NetworkManager.ServerReadyCreate(true);
@@ -1147,6 +1173,12 @@ static int RunHeadlessServer()
 
 		Sleep(10);
 	}
+	printf("Saving World...\n");
+
+	//doesnt seem to work, lets just stick with forcing save on close
+	//C4JThread* saveThread = new C4JThread(&IUIScene_PauseMenu::SaveWorldThreadProc, NULL, "debugSaveGameDirect");
+	//saveThread->Run();
+	//saveThread->WaitForCompletion(5000);
 
 	printf("Stopping server...\n");
 	fflush(stdout);
@@ -1230,6 +1262,9 @@ void StartGame(bool servermode, bool nCmdShow) {
 	{
 		ToggleFullscreen();
 	}
+
+	app.SetWriteSavesToFolderEnabled(true);
+	app.SetLoadSavesFromFolderEnabled(true);
 
 	if (servermode)
 	{
@@ -1356,6 +1391,7 @@ void StartGame(bool servermode, bool nCmdShow) {
 		app.UpdateTime();
 		PIXBeginNamedEvent(0, "Input manager tick");
 		InputManager.Tick();
+
 
 		// Detect KBM vs controller input mode
 		if (InputManager.IsPadConnected(0))
@@ -1556,19 +1592,6 @@ void StartGame(bool servermode, bool nCmdShow) {
 		}
 
 #ifdef _DEBUG_MENUS_ENABLED
-		// F4 Open debug overlay
-		if (g_KBMInput.IsKeyPressed(VK_F4))
-		{
-			if (Minecraft* pMinecraft = Minecraft::GetInstance())
-			{
-				if (pMinecraft->options &&
-					app.GetGameStarted() && !ui.GetMenuDisplayed(0) && pMinecraft->screen == NULL)
-				{
-					ui.NavigateToScene(0, eUIScene_DebugOverlay, NULL, eUILayer_Debug);
-				}
-			}
-		}
-
 		// F6 Open debug console
 		if (g_KBMInput.IsKeyPressed(VK_F6))
 		{

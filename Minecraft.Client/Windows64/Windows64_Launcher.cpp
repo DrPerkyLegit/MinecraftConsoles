@@ -28,6 +28,8 @@ HWND hBtnLogout;
 
 HWND hBtnDiscord;
 
+HWND hBtnViewDistance;
+
 HWND hBtnRegister;
 HWND hBtnLogin;
 
@@ -41,6 +43,15 @@ HWND hLoginUsernameLabel;
 std::string username = "";
 std::string authenticationToken = "";
 
+int viewDistance = 3;
+std::vector<std::string> viewDistanceNames = {
+	"Tiny",
+	"Small",
+	"Medium",
+	"Large",
+	"Extreme"
+};
+
 void onSuccessfulLogin();
 void onLoginFailed();
 void AttemptFullLoginFlow();
@@ -51,6 +62,30 @@ const std::string& Windows64Launcher::GetAuthenticationToken() {
 
 const std::string& Windows64Launcher::GetUsername() {
 	return username;
+}
+
+void NextViewDistance() {
+	viewDistance++;
+
+	if (viewDistance >= viewDistanceNames.size()) {
+		viewDistance = 0;
+	}
+}
+
+int Windows64Launcher::GetViewDistance() {
+	switch (viewDistance) {
+	case 0:
+		return 2;
+	case 1:
+		return 4;
+	case 2:
+		return 8;
+	case 3:
+		return 16;
+	case 4:
+		return 32;
+	}
+	return viewDistance;
 }
 
 void Windows64Launcher::CreateLauncherWindow(HINSTANCE hInstance, std::function<void()> onLaunch) {
@@ -137,6 +172,9 @@ LRESULT OnWindowCreation(HWND hWnd) {
 	hBtnLogout = CreateWindowW(L"BUTTON", L"Logout", WS_CHILD | WS_VISIBLE, 0, 0, 80, 25, hWnd, (HMENU)5, nullptr, nullptr);
 
 	hBtnDiscord = CreateWindowW(L"BUTTON", L"Discord", WS_CHILD | WS_VISIBLE, 0, 0, 80, 25, hWnd, (HMENU)6, nullptr, nullptr);
+	hBtnViewDistance = CreateWindowW(L"BUTTON", L"View Distance: None", WS_CHILD | WS_VISIBLE, 0, 0, 120, 25, hWnd, (HMENU)7, nullptr, nullptr);
+
+	SetWindowText(hBtnViewDistance, std::string("View Distance: " + viewDistanceNames[viewDistance]).c_str());
 
 	hUsernameLabel = CreateWindowW(L"STATIC", L"Username:", WS_CHILD | WS_VISIBLE, 0, 0, 80, 20, hWnd, nullptr, nullptr, nullptr);
 	hUsernameEdit = CreateWindowW(L"EDIT", L"", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL, 0, 0, 180, 25, hWnd, nullptr, nullptr, nullptr);
@@ -161,6 +199,7 @@ LRESULT OnWindowSize(int width, int height) {
 	MoveWindow(hBtnLogout, 0, 30, labelWidth, 20, TRUE);
 
 	MoveWindow(hBtnDiscord, centerX, 125, labelWidth, 20, TRUE);
+	MoveWindow(hBtnViewDistance, (width / 2) - (160 / 2), 100, 160, 20, TRUE);
 
 	// Username
 	MoveWindow(hUsernameLabel, centerX - labelWidth + 50, startY - 5, labelWidth, 20, TRUE);
@@ -292,12 +331,18 @@ LRESULT OnCommandReceived(HWND hWnd, int type) {
 		onLoginFailed();
 		break;
 	case 6: //Discord
-	{
-		std::fstream fs;
-		fs.open("https://discord.gg/PnFSW8d6ZV");
-		fs.close();
-	}
-	break;
+		{
+			std::fstream fs;
+			fs.open("https://discord.gg/PnFSW8d6ZV");
+			fs.close();
+		}
+		break;
+	case 7: //View Distance
+		{
+			NextViewDistance();
+			SetWindowText(hBtnViewDistance, std::string("View Distance: " + viewDistanceNames[viewDistance]).c_str());
+		}
+		break;
 	}
 	return 0;
 }

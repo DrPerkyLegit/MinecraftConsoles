@@ -6,6 +6,9 @@
 
 class Windows64Launcher {
 public:
+	static int GetViewDistance();
+
+
 	static void CreateLauncherWindow(HINSTANCE hInstance, std::function<void()> onLaunch);
 
 	static void SaveAuthenticationData(const std::string& token, const std::string& refreshToken);
