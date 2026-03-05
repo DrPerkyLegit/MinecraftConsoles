@@ -1100,7 +1100,7 @@ static int RunHeadlessServer()
 	g_NetworkManager.FakeLocalPlayerJoined();
 
 	NetworkGameInitData* param = new NetworkGameInitData();
-	param->seed = 0;
+	param->seed = serverSettings.getInt(L"seed", 0);
 	param->settings = app.GetGameHostOption(eGameHostOption_All);
 
 	wchar_t exePath[MAX_PATH] = {};
@@ -1173,7 +1173,7 @@ static int RunHeadlessServer()
 
 		Sleep(10);
 	}
-	printf("Saving World...\n");
+	//printf("Saving World...\n");
 
 	//doesnt seem to work, lets just stick with forcing save on close
 	//C4JThread* saveThread = new C4JThread(&IUIScene_PauseMenu::SaveWorldThreadProc, NULL, "debugSaveGameDirect");
