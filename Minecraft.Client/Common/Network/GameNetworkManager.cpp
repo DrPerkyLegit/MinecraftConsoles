@@ -1352,6 +1352,11 @@ bool CGameNetworkManager::SystemFlagGet(INetworkPlayer *pNetworkPlayer, int inde
 	return s_pPlatformNetworkManager->SystemFlagGet( pNetworkPlayer, index );
 }
 
+void CGameNetworkManager::SystemFlagClearForSystem(INetworkPlayer* pNetworkPlayer)
+{
+	s_pPlatformNetworkManager->SystemFlagClearForSystem(pNetworkPlayer);
+}
+
 wstring CGameNetworkManager::GatherStats()
 {
 	return s_pPlatformNetworkManager->GatherStats();
